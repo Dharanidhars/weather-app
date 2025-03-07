@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect,useMemo,useState } from 'react'
 import './Weather.css'
 import search_icon from '../assets/search.png'
 import clear_icon from '../assets/clear.png'
@@ -14,10 +14,9 @@ import humidity_icon from '../assets/humidity.png'
 const Weather = () => {
 
     const [weatherData,setWeatherData] = useState(false)
+    const [city,setCity] = useState('Trichy')
 
-    const inputRef = useRef()
-
-    const allIcons = {
+    const allIcons = useMemo( ()=> ({
         "01d" : clear_icon,
         "01n" : clear_icon,
         "02d" : cloud_icon,
@@ -36,15 +35,15 @@ const Weather = () => {
         "13n" : snow_icon,
         "50d" : snow_icon,
         "50n" : snow_icon,
-    }
+    }),[])
 
-    const search = async (city) => {
+    const search = useCallback( async (city) => {
         if(city === ''){
             alert("Enter City Name")
             return;
         }
         try{
-            const apikey = "076b75855d083602ea5db58b4cad0d56"
+            const apikey = process.env.REACT_APP_API_KEY
 
             const url= `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apikey}`
 
@@ -72,20 +71,24 @@ const Weather = () => {
             setWeatherData(false)
             console.error("Error in fetching weather data")
         }
-        
-
-    }
-    useEffect( () => {
-        search('Trichy');
-    },[])
+        finally{
+            setCity('')
+        }
+    },[allIcons])
+    
+    useEffect( ()=>{
+        search('trichy')
+    },[search] )
+    
+   
     
 
   return (
     <div className='weather'>
 
         <div className="search-bar">
-            <input type="text" placeholder='Search' ref={inputRef} />
-            <img src={search_icon} alt="search" onClick={() => search(inputRef.current.value)} />
+            <input type="text" placeholder='Search'  value={city} onChange={ (e)=> setCity(e.target.value) }  />
+            <img src={search_icon} alt="search" onClick={()=>search(city)}  />
         </div>
 
         { weatherData ? <>
